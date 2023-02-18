@@ -1,0 +1,62 @@
+version: "3.9"
+
+services:
+  mysql-server-8:
+   image: mysql:8.0.28
+   command: 
+    --character-set-server=utf8mb4
+    --collation-server=utf8mb4_bin
+    --default-authentication-plugin=mysql_native_password
+   hostname: mysql-server
+   environment:
+    - MYSQL_DATABASE=zabbix
+    - MYSQL_USER=zabbix
+    - MYSQL_PASSWORD=zabbix_pwd
+    - MYSQL_ROOT_PASSWORD=root_pwd
+   ports:
+    - 3306:3306
+   security_opt:
+    - seccomp:unconfined
+   volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /data/zabbix/mysql_20230218:/var/lib/mysql
+   restart: unless-stopped
+
+  zabbix-server-mysql-6:
+   image: zabbix/zabbix-server-mysql:centos-6.0.8
+   network_mode: host        # 改成host，不改成host在当前模式下会连接不上数据库
+   environment:
+    - DB_SERVER_HOST=10.10.6.160
+    - MYSQL_DATABASE=zabbix
+    - MYSQL_USER=zabbix
+    - MYSQL_PASSWORD=zabbix_pwd
+    - MYSQL_ROOT_PASSWORD=root_pwd
+   depends_on: 
+    - mysql-server-8
+   volumes:
+    - /data/zabbix/zabbix_log:/var/log/zabbix
+    - /etc/localtime:/etc/localtime
+    - /etc/timezone:/etc/timezone
+    - /data/zabbix/zabbix_etc:/etc/zabbix
+   restart: unless-stopped
+
+
+  zabbix-web-nginx-mysql-6:
+   image: zabbix/zabbix-web-nginx-mysql:centos-6.0.8
+   environment:
+    - ZBX_SERVER_HOST=10.10.6.160
+    - ZBX_SERVER_PORT=10051
+    - DB_SERVER_HOST=10.10.6.160
+    - MYSQL_DATABASE=zabbix
+    - MYSQL_USER=zabbix
+    - MYSQL_PASSWORD=zabbix_pwd
+    - MYSQL_ROOT_PASSWORD=root_pwd
+   ports:
+    - 8081:8080
+   volumes:
+    - /etc/localtime:/etc/localtime
+    - /etc/timezone:/etc/timezone
+    - /data/zabbix/nginx_etc/conf.d:/etc/nginx/conf.d
+   depends_on: 
+    - mysql-server-8
+   restart: unless-stopped
