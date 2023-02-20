@@ -75,5 +75,32 @@ services:
    networks:
     - zbx_net
 
+# ---
+  zabbix-proxy-mysql-6:
+   image: zabbix/zabbix-proxy-mysql:centos-6.0.8
+   environment:
+    - ZBX_HOSTNAME=loc_zbx_proxy
+    - ZBX_SERVER_HOST=10.10.6.160
+    - DB_SERVER_HOST=10.10.6.160
+    - MYSQL_DATABASE=zabbix_proxy
+    - MYSQL_USER=zabbix_proxy
+    - MYSQL_PASSWORD=zabbix_proxy_pwd
+    - MYSQL_ROOT_PASSWORD=root_pwd
+    - ZBX_STARTPINGERS=10
+    - ZBX_CACHESIZE=128M
+    - ZBX_PROXYMODE=0
+    - ZBX_CONFIGFREQUENCY=300
+   ports:
+    - 10051:10051
+
+   volumes:
+    - /etc/localtime:/etc/localtime
+    - /etc/timezone:/etc/timezone
+
+   restart: unless-stopped
+
+   networks:
+    - zbx_net
+
 networks:
   zbx_net:
